@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera List</title>
+</head>
+<body>
+    <h1>Camera List</h1>
+    <table>
+        <tr>
+            <th>Camera ID</th>
+            <th>Source</th>
+            <th>Album</th>
+            <th>Timelapse</th>
+            <th>Edit</th>
+        </tr>
+        {% for camera in cameras %}
+            <tr>
+                <td>{{ camera.camera_id }}</td>
+                <td>{{ camera.source }}</td>
+                <td>{{ camera.album }}</td>
+                <td>{{ camera.timelapse }}</td>
+                <td><a href="{{ url_for('edit_camera', camera_id=camera.camera_id) }}">Edit</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="{{ url_for('add_camera') }}">Add New Camera</a>
+</body>
+</html>
+

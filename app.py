@@ -26,7 +26,7 @@ def create_app():
     app = Flask(__name__)
 
     app.secret_key = 'secret-key'
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///database.db"
+    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://timelapse:3vvp3agl3$@database-1.c3ggm2sqauad.us-east-1.rds.amazonaws.com:3306/timelapse"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
     login_manager.init_app(app)

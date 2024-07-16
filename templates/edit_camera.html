@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Camera Parameters</title>
+</head>
+<body>
+    <h1>Edit Camera Parameters</h1>
+    <form method="post">
+        <label for="source">Source:</label>
+        <input type="text" id="source" name="source" value="{{ camera.source }}"><br><br>
+
+        <label for="album">Album:</label>
+        <input type="text" id="album" name="album" value="{{ camera.album }}"><br><br>
+
+        <label for="timelapse">Timelapse:</label>
+        <input type="text" id="timelapse" name="timelapse" value="{{ camera.timelapse }}"><br><br>
+
+        <input type="submit" value="Save">
+    </form>
+    <br>
+    <form method="post" action="{{ url_for('delete_camera', camera_id=camera.camera_id) }}">
+        <input type="submit" value="Delete Camera">
+    </form>
+</body>
+</html>
+

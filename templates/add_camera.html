@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add New Camera</title>
+</head>
+<body>
+    <h1>Add New Camera</h1>
+    <form method="post">
+        <label for="camera_id">Camera ID:</label>
+        <input type="text" id="camera_id" name="camera_id" value="{{ next_camera_id }}" readonly><br><br>
+
+        <label for="source">Source:</label>
+        <input type="text" id="source" name="source"><br><br>
+
+        <label for="album">Album:</label>
+        <input type="text" id="album" name="album"><br><br>
+
+        <label for="timelapse">Timelapse:</label>
+        <input type="text" id="timelapse" name="timelapse"><br><br>
+
+        <input type="submit" value="Add Camera">
+    </form>
+    <br>
+    <a href="{{ url_for('index') }}">Back to Camera List</a>
+</body>
+</html>
+
