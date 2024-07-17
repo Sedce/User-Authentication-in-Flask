@@ -77,7 +77,8 @@ def retrieve_photos_by_album_id_within_date_range(album_id, begin_date_str, end_
         print("Parsed End Date:", end_date)
         print("Formatted Begin Date:", formatted_begin_date)
         print("Fformatted End Date:", formatted_end_date)
-       
+        
+
         cursor.execute(query, (album_id, formatted_begin_date, formatted_end_date))
         photos = cursor.fetchall()
     except mysql.connector.Error as err:
@@ -100,6 +101,7 @@ def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end
             ORDER by date_taken ASC
         """
          
+        #photo = db.session.query(Photos.HD1080p_data).where(album_id == Photos.album_id, Photos.data_taken = ).order_by(Photos.date_taken.asc())
         # Convert date strings to datetime.date objects
         begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
@@ -128,15 +130,15 @@ def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end
 def retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, end_date_str, table_name = 'photos'):
     photos = []
     try:
-        cnx = mysql.connector.connect(**db_config)
-        cursor = cnx.cursor(dictionary=True)
-        query = """
-            SELECT id, album_id, source_name, date_taken, thumbnail_data
-            FROM photos
-            WHERE album_id = %s
-            AND date_taken BETWEEN %s AND %s
-            ORDER by date_taken DESC
-        """.format(table_name)
+        # cnx = mysql.connector.connect(**db_config)
+        # cursor = cnx.cursor(dictionary=True)
+        # query = """
+        #     SELECT id, album_id, source_name, date_taken, thumbnail_data
+        #     FROM photos
+        #     WHERE album_id = %s
+        #     AND date_taken BETWEEN %s AND %s
+        #     ORDER by date_taken DESC
+        # """.format(table_name)
          
         # Convert date strings to datetime.date objects
         begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
@@ -147,31 +149,29 @@ def retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, 
         # Set time to just before midnight for the end of the day
         formatted_end_date = datetime.combine(end_date, time.max).strftime('%Y-%m-%d %H:%M:%S')
     
+        photos = db.session.query(Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken, Photos.thumbnail_data).where(album_id == Photos.album_id).filter(and_(Photos.date_taken <= begin_date, Photos.date_taken >= end_date))
 
         print("Parsed Begin Date:", begin_date)
         print("Parsed End Date:", end_date)
         print("Formatted Begin Date:", formatted_begin_date)
         print("Fformatted End Date:", formatted_end_date)
        
-        cursor.execute(query, (album_id, formatted_begin_date, formatted_end_date))
-        photos = cursor.fetchall()
-    except mysql.connector.Error as err:
+    except Exception as err:
         print("MySQL Error:", err)
-    finally:
-        cursor.close()
-        cnx.close()
     return photos
 
 
 def retrieve_photo_by_id(photo_id):
     try:
-        connection = mysql.connector.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        query = "SELECT photo_data FROM photos WHERE id = %s"
-        cursor.execute(query, (photo_id,))
-        photo = cursor.fetchone()
-        cursor.close()
-        connection.close()
+        # connection = mysql.connector.connect(**db_config)
+        # cursor = connection.cursor(dictionary=True)
+        # query = "SELECT photo_data FROM photos WHERE id = %s"
+        # cursor.execute(query, (photo_id,))
+        # photo = cursor.fetchone()
+        # cursor.close()
+        # connection.close()
+        photo = db.session.query(Photos.photo_data).where(photo_id == Photos.id).first()
+
         return photo
     except mysql.connector.Error as err:
         print("Error retrieving photo:", err)
@@ -251,6 +251,7 @@ def retrieve_last_device_for_album(album_id):
             ORDER BY date_taken DESC
             LIMIT 1
         """
+
         cursor.execute(query, (album_id,))
         result = cursor.fetchone()  # Fetch the tuple
         camera_id = result[0] if result else None  # Extract camera_id from the tuple
@@ -268,21 +269,18 @@ def retrieve_last_device_for_album(album_id):
 def retrieve_photos_from_database(album_id=None):
     photos = []
     try:
-        cnx = mysql.connector.connect(**db_config)
-        cursor = cnx.cursor(dictionary=True)
-        
+        #cnx = mysql.connector.connect(**db_config)
+        #cursor = cnx.cursor(dictionary=True)
         if album_id is None:
-            query = "SELECT id, album_id, source_name, date_taken, thumbnail_data FROM photos"
+            photos = db.session.query(Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken, Photos.thumbnail_data)
         else:
-            query = "SELECT id, album_id, source_name, date_taken, thumbnail_data FROM photos WHERE album_id = %s"
-            cursor.execute(query, (album_id,))
-            
-        photos = cursor.fetchall()
-    except mysql.connector.Error as err:
+            print("-------Getting photos----------")
+            photos = db.session.query(Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken, Photos.thumbnail_data).where(album_id == Photos.album_id)
+
+    except Exception as err:
         print("MySQL Error:", err)
-    finally:
-        cursor.close()
-        cnx.close()
+
+    print(photos)
     return photos
 
 @login_manager.user_loader
@@ -524,10 +522,9 @@ def view_photos(album_id):
             print("End Date:", end_date_str)
 
             # Retrieve photos from the specified album_id within the selected date range
-            photos = retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
-            print("Number of Photos:", len(photos))
+            photos = retrieve_photos_from_database(album_id)
+            #print("Number of Photos:", len(photos))
             
-
             if not photos:
                 return "No photos found in the selected date range."    
 
@@ -535,6 +532,14 @@ def view_photos(album_id):
         
         except Exception as e:
             return f"Error generating photo view: {e}"
+
+@app.route('/photo/<int:photo_id>')
+def view_photo(photo_id):
+    photo = retrieve_photo_by_id(photo_id)  # Retrieve photo data by ID from the database
+    if photo:
+        return render_template('./view_single_photo.html', photo=photo)
+    else:
+        return "Photo not found", 404
 
 @app.route('/live_feed/<int:album_id>')
 def live_feed(album_id):

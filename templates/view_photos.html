@@ -1,31 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta data-name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+    <link href="https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet" />
     <title>View Photos</title>
-    <style>
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px;
-        }
-        .photo-item {
-            text-align: center;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
 </head>
 <body>
     <h1>View Photos</h1>
     <a href="{{ url_for('index') }}">Home</a> |
+    </br>
+    Begin Date: <input type="date" id="begin-date-picker" required><br>
+    End Date: <input type="date" id="end-date-picker" required>
+    <div class="button-container">
+
+        <form class="album-form" action="{{ url_for('generate_timelapse', album_id=1) }}" method="post">
+            <input type="hidden" class="begin-date-input" name="begin_date" value="">
+            <input type="hidden" class="end-date-input" name="end_date" value="">
+            <button type="button" onclick="updateDatesInForms(); form.submit();">Generate Timelapse</button>
+        </form>
+
+        <form class="album-form" action="{{ url_for('view_photos', album_id=1) }}" method="post">
+            <input type="hidden" class="begin-date-input" name="begin_date" value="">
+            <input type="hidden" class="end-date-input" name="end_date" value="">
+            <button type="button" onclick="updateDatesInForms(); form.submit();">View Photos</button>
+        </form>
+
+    <form method="post" action="{{ url_for('latest_photo', album_id=1) }}">
+        <button type="submit">Latest Photo</button>
+    </form>
+
+</div>
+    <div class="container">
+    <div class="search-box">
+        <i class="bx bx-search"></i>
+        <input type="text" placeholder="Search a movie" />
+      </div>
  
-    <br><br>
- 
-    <div class="grid">
+    <div class="images">
         {% for photo in photos %}
-        <div class="photo-item">
+        <div class="image-box">
             {% if photo.thumbnail_data %}
                 <a href="{{ url_for('view_photo', photo_id=photo.id) }}">
                     <img src="data:image/jpeg;base64,{{ photo.thumbnail_data|b64encode }}" alt="Thumbnail">
@@ -33,10 +49,9 @@
             {% else %}
                 No thumbnail available
             {% endif %}
-            <p>Source Name: {{ photo.source_name }}</p>
-            <p>Date Taken: {{ photo.date_taken }}</p>
         </div>
         {% endfor %}
+        </div>
 </body>
 </html>
 
