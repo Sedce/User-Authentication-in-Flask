@@ -11,7 +11,7 @@
         margin-right: 10px; /* Optional: Add spacing between buttons */
     }
 </style>
- <script>
+ <!-- <script>
         document.addEventListener('DOMContentLoaded', function () {
             var today = new Date();
             var beginDatePicker = document.getElementById('begin-date-picker');
@@ -43,12 +43,12 @@
                 form.querySelector('.end-date-input').value = endDate;
             });
         }
-    </script>
+    </script> -->
 
 
 </head>
 <body>
-    <ul>
+    <!-- <ul>
         {% for album in albums %}
         <li>
             Album {{ album.album_id }}
@@ -90,21 +90,16 @@
             {% endif %}
         </li>
         {% endfor %}
-    </ul>
+    </ul> -->
 
     <div id="grid">
         {% for camera in cameras %}
-        <div>Reservoir Cam
-            <form method="post" action="{{ url_for('camera_view', album_id=album.album_id) }}">
+        <div>Cam
+            <form method="post" action="{{ url_for('camera_view', album_id=camera.album) }}">
                 <button type="submit">Camera</button>
             </form>   
         </div>
-        
-        <div>Powerhouse Cam</div>
-        <div>3</div>
-        <div>4</div>
-        <div>5</div>
-        <div>6</div>
+        {% endfor %}
     </div>
 </body>
 {% endblock %}

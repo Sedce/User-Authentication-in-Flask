@@ -1,61 +1,89 @@
 {%extends "base.html" %} 
 {%block content%} 
+<script>
+
+        function updateDatesInForms() {
+            var today = new Date();
+            var beginDate = today.toLocaleDateString(undefined, options);
+            var endDate = today.toLocaleDateString(undefined, options);
+            var options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            var todayFormatted = today.toLocaleDateString(undefined, options);
+            beginDate = todayFormatted;
+            endDate = todayFormatted;
+
+            if(document.getElementById('begin-date-picker')?.value){
+                beginDate = document.getElementById('begin-date-picker').value;
+                endDate = document.getElementById('end-date-picker').value;
+            }
+
+            var albumForms = document.querySelectorAll('.album-form');
+
+            albumForms.forEach(function (form) {
+                form.querySelector('.begin-date-input').value = beginDate;
+                form.querySelector('.end-date-input').value = endDate;
+            });
+        }
+    </script>
 <body>
     <h1>View Photos</h1>
     <a href="{{ url_for('index') }}">Home</a> |
     </br>
-
-    <ul>
-        <a href="{{ url_for('generate_timelapse', album_id=1) }}">
-            <li class="text-lg px-8 py-3 {% if selected == "Generate Timelapse" %}border-l-4 bg-gray-200{% endif %}"">Generate Timelapse</li>
-        </a>
-        <a href="{{ url_for('view_photos', album_id=1) }}">
-            <li class="text-lg px-8 py-3 {% if selected == "View Photos" %}border-l-4 bg-gray-200{% endif %}"">View Photos</li>
-        </a>
-        <a href="{{ url_for('latest_photo', album_id=1)}}">
-            <li class="text-lg px-8 py-3 {% if selected == "" %}border-l-4 bg-gray-200{% endif %}"">Latest</li>
-        </a>
-    </ul>
-    Begin Date: <input type="date" id="begin-date-picker" required><br>
-    End Date: <input type="date" id="end-date-picker" required>
-    <div class="button-container">
-
-        <form class="album-form" action="{{ url_for('generate_timelapse', album_id=1) }}" method="post">
-            <input type="hidden" class="begin-date-input" name="begin_date" value="">
-            <input type="hidden" class="end-date-input" name="end_date" value="">
-            <button type="button" onclick="updateDatesInForms(); form.submit();">Generate Timelapse</button>
-        </form>
-
-        <form class="album-form" action="{{ url_for('view_photos', album_id=1) }}" method="post">
-            <input type="hidden" class="begin-date-input" name="begin_date" value="">
-            <input type="hidden" class="end-date-input" name="end_date" value="">
-            <button type="button" onclick="updateDatesInForms(); form.submit();">View Photos</button>
-        </form>
-
-    <form method="post" action="{{ url_for('latest_photo', album_id=1) }}">
-        <button type="submit">Latest Photo</button>
-    </form>
-
 </div>
-    <div class="container">
-    <div class="search-box">
-        <i class="bx bx-search"></i>
-        <input type="text" placeholder="Search a movie" />
-      </div>
- 
-    <div class="images">
-        {% for photo in photos %}
-        <div class="image-box">
-            {% if photo.thumbnail_data %}
-                <a href="{{ url_for('view_photo', photo_id=photo.id) }}">
-                    <img src="data:image/jpeg;base64,{{ photo.thumbnail_data|b64encode }}" alt="Thumbnail">
-                </a>
-            {% else %}
-                No thumbnail available
-            {% endif %}
+    <div id="contents"    style="float: left; width: 50%">
+        <div class="images">
+            {% for photo in photos %}
+            <div class="image-box">
+                {% if photo.thumbnail_data %}
+                    <a href="{{ url_for('view_photo', photo_id=photo.id) }}">
+                        <img src="data:image/jpeg;base64,{{ photo.thumbnail_data|b64encode }}" alt="Thumbnail">
+                    </a>
+                {% else %}
+                    No thumbnail available
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-        </div>
+    </div>    
+<div id="right_panel" style="float:left; width:100px;">
+    <div id="date-picker" style="width:100%">
+        Begin Date: <input type="date" id="begin-date-picker" required><br>
+        End Date: <input type="date" id="end-date-picker" required>
+        <div class="button-container">
+
+            <form class="album-form" action="{{ url_for('generate_timelapse', album_id=1) }}" method="post">
+                <input type="hidden" class="begin-date-input" name="begin_date" value="">
+                <input type="hidden" class="end-date-input" name="end_date" value="">
+                <button type="button" onclick="updateDatesInForms(); form.submit();">Generate Timelapse</button>
+            </form>
+
+            <form class="album-form" action="{{ url_for('view_photos', album_id=1) }}" method="post">
+                <input type="hidden" class="begin-date-input" name="begin_date" value="">
+                <input type="hidden" class="end-date-input" name="end_date" value="">
+                <button type="button" onclick="updateDatesInForms(); form.submit();">View Photos</button>
+            </form>
+
+        <form method="post" action="{{ url_for('latest_photo', album_id=1) }}">
+            <button type="submit">Latest Photo</button>
+        </form>
+    </div>
+    <div id="gallery" style="width:100%; border-style: solid;border-color:black">
+                {% if generated_video_path %}
+                    <h3>Generated Timelapse Video</h3>
+
+                    <p>Video Path: {{ generated_video_path }}</p>
+            
+                    <video controls width="800">
+                        <source src="{{ url_for('get_generated_video', video_filename=generated_video_path) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+        <br>
+            <a href="{{ url_for('get_generated_video', video_filename=generated_video_path) }}" download>
+                <button>Download Video</button>
+            </a>
+
+                    {% endif %}
+    </div>
+</div>
 </body>
 {% endblock %}
 

@@ -12,6 +12,7 @@ from flask import (
 )
 from flask import Flask, render_template, request, Response, send_file, redirect, url_for, jsonify, send_from_directory
 import base64
+import time
 from datetime import timedelta
 from sqlalchemy.exc import (
     IntegrityError,
@@ -106,7 +107,8 @@ def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end
         print(end_date_str)
         begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        
+
+
         # Set time to midnight for the beginning of the day
         formatted_begin_date = datetime.combine(begin_date, time.min).strftime('%Y-%m-%d %H:%M:%S')
         # Set time to just before midnight for the end of the day
@@ -299,7 +301,8 @@ def b64encode_filter(s):
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
     try:
-        albums = db.session.query(Photos.album_id).distinct()
+        cameras = db.session.query(Camera_Parameters)
+        
         # db_connection = mysql.connector.connect(**db_config)
         # cursor = db_connection.cursor(dictionary=True)
         # query = "SELECT DISTINCT album_id FROM photos"
@@ -311,10 +314,8 @@ def index():
     except Exception as err:
         print("MySQL Error:", err)
         albums = []
-    print("---------albums----------")
-    print(albums)
     today = datetime.now().date().strftime('%Y-%m-%d')  # Get today's date
-    return render_template("index.html", albums=albums, today=today)
+    return render_template("index.html", cameras=cameras, today=today)
 
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
@@ -510,23 +511,18 @@ def get_generated_video(video_filename):
     return send_from_directory('.', video_filename, as_attachment=True)
 
 @app.route('/cameraView/<int:album_id>', methods=['GET', 'POST'], strict_slashes=False)
-def camera_view():
+def camera_view(album_id):
 
     if request.method == 'POST':
         try:
-            begin_date_str = request.form['begin_date']
-            end_date_str = request.form['end_date']
-            print("Begin Date:", begin_date_str)
-            print("End Date:", end_date_str)
-
             # Retrieve photos from the specified album_id within the selected date range
-            photos = retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
+            photos = retrieve_photos_from_database(album_id)
             #print("Number of Photos:", len(photos))
             
             if not photos:
                 return "No photos found in the selected date range."    
 
-            return render_template('camera_view.html', photos=photos, album_id=album_id)
+            return render_template('view_photos.html', photos=photos, album_id=album_id)
         
         except Exception as e:
             return f"Error generating photo view: {e}"
