@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/main.css') }}">
-    <title style="text-align: center">Camera Dashboard</title>
-
+{%extends "base.html" %} 
+{%block content%} 
 <style>
     .button-container {
         display: inline-block;
@@ -15,7 +11,6 @@
         margin-right: 10px; /* Optional: Add spacing between buttons */
     }
 </style>
-..
  <script>
         document.addEventListener('DOMContentLoaded', function () {
             var today = new Date();
@@ -28,8 +23,19 @@
         });
 
         function updateDatesInForms() {
-            var beginDate = document.getElementById('begin-date-picker').value;
-            var endDate = document.getElementById('end-date-picker').value;
+            var today = new Date();
+            var beginDate = today.toLocaleDateString(undefined, options);
+            var endDate = today.toLocaleDateString(undefined, options);
+            var options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            var todayFormatted = today.toLocaleDateString(undefined, options);
+            beginDate = todayFormatted;
+            endDate = todayFormatted;
+
+            if(document.getElementById('begin-date-picker')?.value){
+                beginDate = document.getElementById('begin-date-picker').value;
+                endDate = document.getElementById('end-date-picker').value;
+            }
+
             var albumForms = document.querySelectorAll('.album-form');
 
             albumForms.forEach(function (form) {
@@ -42,29 +48,10 @@
 
 </head>
 <body>
-    <header>
-		<div class="inner">
-			<div class="burger"></div>
-			<nav>
-				<a class="active" href="#">Dashboard</a>
-				<a href="#">About Us</a>
-				<a href="#">Our Work</a>
-				<a href="#">Get Involved</a>
-			</nav>
-			<a href="#" class="donate-link">Log Out</a>
-		</div>
-	</header>
-<form>
-        Begin Date: <input type="date" id="begin-date-picker" required><br>
-        End Date: <input type="date" id="end-date-picker" required>
-    </form>
-
-
     <ul>
         {% for album in albums %}
         <li>
             Album {{ album.album_id }}
-
 
 <div class="button-container">
 
@@ -73,23 +60,17 @@
                 <input type="hidden" class="end-date-input" name="end_date" value="">
                 <button type="button" onclick="updateDatesInForms(); form.submit();">Generate Timelapse</button>
             </form>
-
             <form class="album-form" action="{{ url_for('view_photos', album_id=album.album_id) }}" method="post">
                 <input type="hidden" class="begin-date-input" name="begin_date" value="">
                 <input type="hidden" class="end-date-input" name="end_date" value="">
                 <button type="button" onclick="updateDatesInForms(); form.submit();">View Photos</button>
             </form>
-
-        <form method="post" action="{{ url_for('latest_photo', album_id=album.album_id) }}">
-            <button type="submit">Latest Photo</button>
-        </form>
-
-
+            <form method="post" action="{{ url_for('latest_photo', album_id=album.album_id) }}">
+                <button type="submit">Latest Photo</button>
+            </form>
             <a href="{{ url_for('live_feed', album_id=album.album_id) }}">
                 <button>Live Feed</button>
             </a>
-
-
 </div>
 
             {% if generated_video_path %}
@@ -112,19 +93,18 @@
     </ul>
 
     <div id="grid">
+        {% for camera in cameras %}
         <div>Reservoir Cam
-            <form method="get" action="{{ url_for('camera_configurations') }}">
-                <button type="submit">Latest Photo</button>
+            <form method="post" action="{{ url_for('camera_view', album_id=album.album_id) }}">
+                <button type="submit">Camera</button>
             </form>   
         </div>
+        
         <div>Powerhouse Cam</div>
         <div>3</div>
         <div>4</div>
         <div>5</div>
         <div>6</div>
-        <div>7</div>
-        <div>8</div>
-        <div>9</div>
     </div>
 </body>
-</html>
+{% endblock %}

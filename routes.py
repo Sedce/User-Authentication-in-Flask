@@ -91,8 +91,8 @@ def retrieve_photos_by_album_id_within_date_range(album_id, begin_date_str, end_
 def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str):
     photos = []
     try:
-        cnx = mysql.connector.connect(**db_config)
-        cursor = cnx.cursor(dictionary=True)
+       # cnx = mysql.connector.connect(**db_config)
+        #cursor = cnx.cursor(dictionary=True)
         query = """
             SELECT HD1080p_data
             FROM photos
@@ -101,8 +101,9 @@ def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end
             ORDER by date_taken ASC
         """
          
-        #photo = db.session.query(Photos.HD1080p_data).where(album_id == Photos.album_id, Photos.data_taken = ).order_by(Photos.date_taken.asc())
         # Convert date strings to datetime.date objects
+        print(begin_date_str)
+        print(end_date_str)
         begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         
@@ -117,13 +118,9 @@ def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end
         print("Formatted Begin Date:", formatted_begin_date)
         print("Formatted End Date:", formatted_end_date)
        
-        cursor.execute(query, (album_id, formatted_begin_date, formatted_end_date))
-        photos = cursor.fetchall()
-    except mysql.connector.Error as err:
+        photos = db.session.query(Photos.HD1080p_data).where(album_id == Photos.album_id).filter(and_(Photos.date_taken <= formatted_begin_date, Photos.date_taken >= formatted_end_date)).order_by(Photos.date_taken.asc())
+    except Exception as err:
         print("MySQL Error:", err)
-    finally:
-        cursor.close()
-        cnx.close()
     return photos
 
 
@@ -171,7 +168,6 @@ def retrieve_photo_by_id(photo_id):
         # cursor.close()
         # connection.close()
         photo = db.session.query(Photos.photo_data).where(photo_id == Photos.id).first()
-
         return photo
     except mysql.connector.Error as err:
         print("Error retrieving photo:", err)
@@ -185,6 +181,8 @@ def retrieve_photos_by_album_id(album_id):
         query = "SELECT photo_data FROM photos WHERE album_id = %s ORDER by date_taken DESC"
         cursor.execute(query, (album_id,))
         photos = cursor.fetchall()
+
+        photos = db.session.query(Photos.photo_data)
     except mysql.connector.Error as err:
         print("MySQL Error:", err)
     finally:
@@ -511,6 +509,28 @@ def get_generated_video(video_filename):
     print(video_filename)
     return send_from_directory('.', video_filename, as_attachment=True)
 
+@app.route('/cameraView/<int:album_id>', methods=['GET', 'POST'], strict_slashes=False)
+def camera_view():
+
+    if request.method == 'POST':
+        try:
+            begin_date_str = request.form['begin_date']
+            end_date_str = request.form['end_date']
+            print("Begin Date:", begin_date_str)
+            print("End Date:", end_date_str)
+
+            # Retrieve photos from the specified album_id within the selected date range
+            photos = retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
+            #print("Number of Photos:", len(photos))
+            
+            if not photos:
+                return "No photos found in the selected date range."    
+
+            return render_template('camera_view.html', photos=photos, album_id=album_id)
+        
+        except Exception as e:
+            return f"Error generating photo view: {e}"
+
 @app.route('/view_photos/<int:album_id>', methods=['GET', 'POST'], strict_slashes=False)
 def view_photos(album_id):
 
@@ -522,7 +542,7 @@ def view_photos(album_id):
             print("End Date:", end_date_str)
 
             # Retrieve photos from the specified album_id within the selected date range
-            photos = retrieve_photos_from_database(album_id)
+            photos = retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
             #print("Number of Photos:", len(photos))
             
             if not photos:

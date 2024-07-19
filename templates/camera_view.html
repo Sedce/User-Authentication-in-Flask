@@ -1,11 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>View Photos</title>
-    <style>
-        
-    </style>
-</head>
+{%extends "base.html" %} 
+{%block content%} 
 <body>
     <h1>View Photos</h1>
     <a href="{{ url_for('index') }}">Home</a> |
@@ -29,5 +23,5 @@
         </div>
         {% endfor %}
 </body>
-</html>
+{% endblock %}
 

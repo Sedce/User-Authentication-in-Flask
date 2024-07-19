@@ -1,17 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta data-name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
-    <link href="https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet" />
-    <title>View Photos</title>
-</head>
+{%extends "base.html" %} 
+{%block content%} 
 <body>
     <h1>View Photos</h1>
     <a href="{{ url_for('index') }}">Home</a> |
     </br>
+
+    <ul>
+        <a href="{{ url_for('generate_timelapse', album_id=1) }}">
+            <li class="text-lg px-8 py-3 {% if selected == "Generate Timelapse" %}border-l-4 bg-gray-200{% endif %}"">Generate Timelapse</li>
+        </a>
+        <a href="{{ url_for('view_photos', album_id=1) }}">
+            <li class="text-lg px-8 py-3 {% if selected == "View Photos" %}border-l-4 bg-gray-200{% endif %}"">View Photos</li>
+        </a>
+        <a href="{{ url_for('latest_photo', album_id=1)}}">
+            <li class="text-lg px-8 py-3 {% if selected == "" %}border-l-4 bg-gray-200{% endif %}"">Latest</li>
+        </a>
+    </ul>
     Begin Date: <input type="date" id="begin-date-picker" required><br>
     End Date: <input type="date" id="end-date-picker" required>
     <div class="button-container">
@@ -53,5 +57,5 @@
         {% endfor %}
         </div>
 </body>
-</html>
+{% endblock %}
 
