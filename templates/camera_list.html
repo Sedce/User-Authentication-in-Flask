@@ -1,0 +1,32 @@
+{%extends "base.html" %} 
+{%block content%} 
+
+</head>
+<body>
+        <div class="container">
+            <h2>Camera List <small>Triggers on 767px</small></h2>
+            <ul class="responsive-table">
+            <li class="table-header">
+                <div class="col col-1">Camera</div>
+                <div class="col col-2">Camera ID</div>
+                <div class="col col-3">Camera Status</div>
+                <div class="col col-4">Settings</div>
+            </li>
+            {% for camera in cameras %}
+            <li class="table-row">
+                <div class="col col-1" data-label="Camera">
+                    <form method="post" action="{{ url_for('camera_view', album_id=camera.album) }}">
+                        <button id="camera-button" type="submit">
+                            <img src="/static/camera_thumbnail.jpg" alt="Camera 1" style="width:100%">
+                        </button>
+                    </form>
+                </div>
+                <div class="col col-2" data-label="Camera ID">camera.id</div>
+                <div class="col col-3" data-label="Camera Status">Active</div>
+                <div class="col col-4" data-label="Camera Location">...</div>
+            </li>
+            {% endfor %}
+            </ul>
+        </div>
+</body>
+{% endblock %}

@@ -1,3 +1,15 @@
+# Standard Library Imports
+import base64
+import os
+import random
+import string
+from datetime import timedelta, datetime, time
+
+# Third-Party Imports
+import imageio
+import numpy as np
+
+from PIL import Image
 from flask import (
     Flask,
     render_template,
@@ -5,122 +17,56 @@ from flask import (
     flash,
     url_for,
     session,
-    request, 
-    Response, 
-    send_file, jsonify, 
+    request,
+    Response,
+    send_file,
+    jsonify,
     send_from_directory
 )
-from flask import Flask, render_template, request, Response, send_file, redirect, url_for, jsonify, send_from_directory
-import base64
-import time
-from datetime import timedelta
-from sqlalchemy.exc import (
-    IntegrityError,
-    DataError,
-    DatabaseError,
-    InterfaceError,
-    InvalidRequestError,
-)
-from werkzeug.routing import BuildError
-
-
-from flask_bcrypt import Bcrypt,generate_password_hash, check_password_hash
-
+from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
 from flask_login import (
     UserMixin,
     login_user,
     LoginManager,
     current_user,
     logout_user,
-    login_required,
+    login_required
 )
-
-from app import create_app,db,login_manager,bcrypt
-from models import User
-from models import Photos
-from models import Camera_Parameters
-from forms import login_form,register_form
+from sqlalchemy import select, and_
+from sqlalchemy.exc import (
+    IntegrityError,
+    DataError,
+    DatabaseError,
+    InterfaceError,
+    InvalidRequestError
+)
 from sqlalchemy.sql.expression import func
-from sqlalchemy import select
+from werkzeug.routing import BuildError
+
+# Application Imports
+from app import create_app, db, login_manager, bcrypt
+from models import User, Photos, Camera_Parameters
+from forms import login_form, register_form
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
-
 from datetime import datetime
-
-
-def retrieve_photos_by_album_id_within_date_range(album_id, begin_date_str, end_date_str):
-    photos = []
-    try:
-        cnx = mysql.connector.connect(**db_config)
-        cursor = cnx.cursor(dictionary=True)
-        query = """
-            SELECT photo_data
-            FROM photos
-            WHERE album_id = %s
-            AND date_taken BETWEEN %s AND %s
-            ORDER by date_taken DESC
-        """
-         
-        # Convert date strings to datetime.date objects
-        begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        
-        # Set time to midnight for the beginning of the day
-        formatted_begin_date = datetime.combine(begin_date, time.min).strftime('%Y-%m-%d %H:%M:%S')
-        # Set time to just before midnight for the end of the day
-        formatted_end_date = datetime.combine(end_date, time.max).strftime('%Y-%m-%d %H:%M:%S')
-    
-
-        print("Parsed Begin Date:", begin_date)
-        print("Parsed End Date:", end_date)
-        print("Formatted Begin Date:", formatted_begin_date)
-        print("Fformatted End Date:", formatted_end_date)
-        
-
-        cursor.execute(query, (album_id, formatted_begin_date, formatted_end_date))
-        photos = cursor.fetchall()
-    except mysql.connector.Error as err:
-        print("MySQL Error:", err)
-    finally:
-        cursor.close()
-        cnx.close()
-    return photos
 
 def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str):
     photos = []
     try:
-       # cnx = mysql.connector.connect(**db_config)
-        #cursor = cnx.cursor(dictionary=True)
-        query = """
-            SELECT HD1080p_data
-            FROM photos
-            WHERE album_id = %s
-            AND date_taken BETWEEN %s AND %s
-            ORDER by date_taken ASC
-        """
-         
-        # Convert date strings to datetime.date objects
-        print(begin_date_str)
-        print(end_date_str)
         begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-
 
         # Set time to midnight for the beginning of the day
         formatted_begin_date = datetime.combine(begin_date, time.min).strftime('%Y-%m-%d %H:%M:%S')
         # Set time to just before midnight for the end of the day
         formatted_end_date = datetime.combine(end_date, time.max).strftime('%Y-%m-%d %H:%M:%S')
-    
-
-        print("Parsed Begin Date:", begin_date)
-        print("Parsed End Date:", end_date)
-        print("Formatted Begin Date:", formatted_begin_date)
-        print("Formatted End Date:", formatted_end_date)
        
-        photos = db.session.query(Photos.HD1080p_data).where(album_id == Photos.album_id).filter(and_(Photos.date_taken <= formatted_begin_date, Photos.date_taken >= formatted_end_date)).order_by(Photos.date_taken.asc())
+        photos = db.session.query(Photos.HD1080p_data).filter(Photos.album_id == album_id,Photos.date_taken.between(formatted_begin_date, formatted_end_date)).order_by(Photos.date_taken.asc()).all()
     except Exception as err:
         print("MySQL Error:", err)
     return photos
@@ -129,16 +75,6 @@ def retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end
 def retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, end_date_str, table_name = 'photos'):
     photos = []
     try:
-        # cnx = mysql.connector.connect(**db_config)
-        # cursor = cnx.cursor(dictionary=True)
-        # query = """
-        #     SELECT id, album_id, source_name, date_taken, thumbnail_data
-        #     FROM photos
-        #     WHERE album_id = %s
-        #     AND date_taken BETWEEN %s AND %s
-        #     ORDER by date_taken DESC
-        # """.format(table_name)
-         
         # Convert date strings to datetime.date objects
         begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
@@ -147,13 +83,7 @@ def retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, 
         formatted_begin_date = datetime.combine(begin_date, time.min).strftime('%Y-%m-%d %H:%M:%S')
         # Set time to just before midnight for the end of the day
         formatted_end_date = datetime.combine(end_date, time.max).strftime('%Y-%m-%d %H:%M:%S')
-    
-        photos = db.session.query(Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken, Photos.thumbnail_data).where(album_id == Photos.album_id).filter(and_(Photos.date_taken <= begin_date, Photos.date_taken >= end_date))
-
-        print("Parsed Begin Date:", begin_date)
-        print("Parsed End Date:", end_date)
-        print("Formatted Begin Date:", formatted_begin_date)
-        print("Fformatted End Date:", formatted_end_date)
+        photos = db.session.query(Photos.thumbnail_data, Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken).filter(Photos.album_id == album_id,Photos.date_taken.between(formatted_begin_date, formatted_end_date)).order_by(Photos.date_taken.desc()).all()
        
     except Exception as err:
         print("MySQL Error:", err)
@@ -162,44 +92,17 @@ def retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, 
 
 def retrieve_photo_by_id(photo_id):
     try:
-        # connection = mysql.connector.connect(**db_config)
-        # cursor = connection.cursor(dictionary=True)
-        # query = "SELECT photo_data FROM photos WHERE id = %s"
-        # cursor.execute(query, (photo_id,))
-        # photo = cursor.fetchone()
-        # cursor.close()
-        # connection.close()
         photo = db.session.query(Photos.photo_data).where(photo_id == Photos.id).first()
         return photo
     except mysql.connector.Error as err:
         print("Error retrieving photo:", err)
         return None
 
-def retrieve_photos_by_album_id(album_id):
-    photos = []
-    try:
-        cnx = mysql.connector.connect(**db_config)
-        cursor = cnx.cursor(dictionary=True)
-        query = "SELECT photo_data FROM photos WHERE album_id = %s ORDER by date_taken DESC"
-        cursor.execute(query, (album_id,))
-        photos = cursor.fetchall()
-
-        photos = db.session.query(Photos.photo_data)
-    except mysql.connector.Error as err:
-        print("MySQL Error:", err)
-    finally:
-        cursor.close()
-        cnx.close()
-    return photos
-
 def retrieve_latest_photo_for_album(album_id):
+
     try:
-        print("--------Querying----------")
-        print(album_id)
         photo = db.session.query(Photos.photo_data, Photos.date_taken).where(album_id == Photos.album_id).order_by(Photos.date_taken.desc()).first()
-       # photo = cursor.fetchone()
     except Exception as err:
-        print("-------MySQL Error:---------", err)
         photo = None
     return photo
 
@@ -232,55 +135,22 @@ def store_photo_in_database(photo_data, album_id, source_name, trigger_type, dat
 
         cursor.close()
         connection.close()
-
-        print("-------Photo stored in the database successfully---------")
      
     except mysql.connector.Error as err:
-        print("Error storing photo in the database:", err)
         return jsonify({'status': 'Error', 'message': str(err)})
-
-
-def retrieve_last_device_for_album(album_id):
-    try:
-        cnx = mysql.connector.connect(**db_config)
-        cursor = cnx.cursor()
-        query = """
-            SELECT device_id
-            FROM photos
-            WHERE album_id = %s
-            ORDER BY date_taken DESC
-            LIMIT 1
-        """
-
-        cursor.execute(query, (album_id,))
-        result = cursor.fetchone()  # Fetch the tuple
-        camera_id = result[0] if result else None  # Extract camera_id from the tuple
-  
-    except mysql.connector.Error as err:
-        print("MySQL Error:", err)
-        camera_id = None
-    finally:
-        cursor.close()
-        cnx.close()
-    return camera_id
-
 
 
 def retrieve_photos_from_database(album_id=None):
     photos = []
     try:
-        #cnx = mysql.connector.connect(**db_config)
-        #cursor = cnx.cursor(dictionary=True)
         if album_id is None:
             photos = db.session.query(Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken, Photos.thumbnail_data)
         else:
-            print("-------Getting photos----------")
             photos = db.session.query(Photos.id, Photos.album_id, Photos.source_name, Photos.date_taken, Photos.thumbnail_data).where(album_id == Photos.album_id)
 
     except Exception as err:
         print("MySQL Error:", err)
 
-    print(photos)
     return photos
 
 @login_manager.user_loader
@@ -300,22 +170,7 @@ def b64encode_filter(s):
 
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
-    try:
-        cameras = db.session.query(Camera_Parameters)
-        
-        # db_connection = mysql.connector.connect(**db_config)
-        # cursor = db_connection.cursor(dictionary=True)
-        # query = "SELECT DISTINCT album_id FROM photos"
-        # cursor.execute(query)
-        # albums = cursor.fetchall()
-        #db_connection.close()
-
-
-    except Exception as err:
-        print("MySQL Error:", err)
-        albums = []
-    today = datetime.now().date().strftime('%Y-%m-%d')  # Get today's date
-    return render_template("index.html", cameras=cameras, today=today)
+    return render_template("index.html")
 
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
@@ -339,8 +194,6 @@ def login():
         title="Login",
         btn_action="Login"
         )
-
-
 
 # Register route
 @app.route("/register/", methods=("GET", "POST"), strict_slashes=False)
@@ -390,35 +243,50 @@ def register():
 
 @app.route("/logout")
 @login_required
-def logout():
+def log_out():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route("/cameraList", methods=("GET", "POST"), strict_slashes=False)
+def camera_list():
+    try:
+        cameras = db.session.query(Camera_Parameters)
+
+    except Exception as err:
+        print("MySQL Error:", err)
+        albums = []
+    today = datetime.now().date().strftime('%Y-%m-%d')  # Get today's date
+    return render_template("camera_list.html", cameras=cameras, today=today)
+
+@app.route("/settings", methods=("GET", "POST"), strict_slashes=False)
+def settings():
+    return render_template("settings.html")
 
 @app.route('/latest_photo/<int:album_id>', methods=['GET', 'POST'])
 def latest_photo(album_id):
 
-  
+    try:
+        photo = retrieve_latest_photo_for_album(album_id)
+        date_taken = photo['date_taken']
+        photo_filename = f'{album_id}_latest_photo_{date_taken}.jpg'
+        filename = photo_filename.replace('/', '_').replace(' ','_').replace(':','_')
+    
+        if request.method == 'GET':
+            if photo:
+                    return Response(photo['photo_data'], content_type='image/jpeg', headers={'Content-Disposition': f'attachment; filename="{filename}"; download_name="{filename}"'})
 
-    photo = retrieve_latest_photo_for_album(album_id)
-    date_taken = photo['date_taken']
-    photo_filename = f'{album_id}_latest_photo_{date_taken}.jpg'
-    filename = photo_filename.replace('/', '_').replace(' ','_').replace(':','_')
- 
-    print(filename)
+            else:
+                    return "No photo found for the specified album ID", 404
+    
+        elif request.method == 'POST':
+            if photo:
+                return jsonify({'photo_data': base64.b64encode(photo.photo_data).decode('utf-8'), 'date_taken': photo.date_taken})
+            else:
+                return "No photo found for the specified album ID", 404
+    except Exception as e:
+            print("Exception", e)
+            return f"Error generating timelapse: {e}"
 
-    if request.method == 'GET':
-       if photo:
-            return Response(photo['photo_data'], content_type='image/jpeg', headers={'Content-Disposition': f'attachment; filename="{filename}"; download_name="{filename}"'})
-
-       else:
-            return "No photo found for the specified album ID", 404
-  
-    elif request.method == 'POST':
-        if photo:
-            return render_template('view_single_photo.html', photo=photo, from_latest_photo=True)
-        else:
-            return "No photo found for the specified album ID", 404
 
 @app.route('/generate_timelapse/<int:album_id>', methods=['GET', 'POST'], strict_slashes=False)
 def generate_timelapse(album_id):
@@ -426,10 +294,6 @@ def generate_timelapse(album_id):
         try:
             begin_date_str = request.form['begin_date']
             end_date_str = request.form['end_date']
-            print("Begin Date:", begin_date_str)
-            print("End Date:", end_date_str)
-            
-
             
             # Retrieve photos from the specified album_id within the selected date range
             photos = retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
@@ -440,7 +304,7 @@ def generate_timelapse(album_id):
 
             # Specify the output video path
             #video_path = f'generated/timelapse_video_{album_id}.mp4'
-            video_path = f'generated/timelapse_video_{album_id}_{"".join(random.choices(string.ascii_letters + string.digits, k=8))}.mp4'
+            video_path = f'generated/timelapse_video_{album_id}_{"".join(begin_date_str +"to" + end_date_str)}.mp4'
 
             # Specify the dimensions of the video frames (vertical resolution of 1080p)
 
@@ -451,26 +315,23 @@ def generate_timelapse(album_id):
 # Find the first frame with HD1080p data to calculate the aspect ratio
             aspect_ratio_set = False
             for HD1080p_data in photos:
-                if HD1080p_data.get('HD1080p_data'):
+                if HD1080p_data:
                     img_array = np.frombuffer(HD1080p_data['HD1080p_data'], dtype=np.uint8)
                     img = Image.open(BytesIO(img_array))
                     img_aspect_ratio = img.width / img.height
                     frame_width = int(frame_height * img_aspect_ratio)
                     aspect_ratio_set = True
                     break
-
             # Specify the desired frame rate for the timelapse video
             frame_rate = 30
 
            
  
             # out = cv2.VideoWriter(video_path, fourcc, frame_rate, (frame_width, frame_height))
-
             video_writer = imageio.get_writer(video_path, format='mp4', fps=frame_rate)
-
             # Iterate through the photos and add them to the video
             for HD1080p_data in photos:
-                if HD1080p_data.get('HD1080p_data'):
+                if HD1080p_data:
                     try:
                         img_array = np.frombuffer(HD1080p_data['HD1080p_data'], dtype=np.uint8)
                         img = Image.open(BytesIO(img_array))
@@ -479,8 +340,6 @@ def generate_timelapse(album_id):
                         
                         video_writer.append_data(img_array_resized)
                     except Exception as e:
-                        print("Error processing image:",e)
-                        print("Image size:", img_array_resized.shape)
                         continue
 
             # Release the VideoWriter
@@ -492,12 +351,11 @@ def generate_timelapse(album_id):
             # Return the generated video directly to be played in the browser
             #return send_file(generated_video_path, as_attachment=False, mimetype='video/mp4')
             
-
             #for the template
-            return render_template('generate_timelapse.html', generated_video_path=generated_video_path, generated_video_filename=generated_video_filename, album_id=album_id)
-
+            return jsonify({'generated_video_path': generated_video_path})
 
         except Exception as e:
+            print("Exception", e)
             return f"Error generating timelapse: {e}"
     else:
         today = datetime.now().date().strftime('%Y-%m-%d')  # Get today's date
@@ -507,7 +365,6 @@ def generate_timelapse(album_id):
 
 @app.route('/get_generated_video/<path:video_filename>')
 def get_generated_video(video_filename):
-    print(video_filename)
     return send_from_directory('.', video_filename, as_attachment=True)
 
 @app.route('/cameraView/<int:album_id>', methods=['GET', 'POST'], strict_slashes=False)
@@ -517,8 +374,6 @@ def camera_view(album_id):
         try:
             # Retrieve photos from the specified album_id within the selected date range
             photos = retrieve_photos_from_database(album_id)
-            #print("Number of Photos:", len(photos))
-            
             if not photos:
                 return "No photos found in the selected date range."    
 
@@ -527,27 +382,37 @@ def camera_view(album_id):
         except Exception as e:
             return f"Error generating photo view: {e}"
 
-@app.route('/view_photos/<int:album_id>', methods=['GET', 'POST'], strict_slashes=False)
+@app.route('/view_photos/<int:album_id>', methods=['GET', 'POST'])
 def view_photos(album_id):
-
     if request.method == 'POST':
         try:
             begin_date_str = request.form['begin_date']
             end_date_str = request.form['end_date']
-            print("Begin Date:", begin_date_str)
-            print("End Date:", end_date_str)
+            page = int(request.form.get('page', 1))
+            per_page = 10  # Number of photos per page
 
             # Retrieve photos from the specified album_id within the selected date range
-            photos = retrieve_HD1080p_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
-            #print("Number of Photos:", len(photos))
-            
-            if not photos:
-                return "No photos found in the selected date range."    
+            photos = retrieve_thumbnails_by_album_id_within_date_range(album_id, begin_date_str, end_date_str)
+            serialized_photos = [{'id': photo['id'], 'thumbnail_data': base64.b64encode(photo['thumbnail_data']).decode('utf-8')} for photo in photos]
+                # Total number of photos for the given query
+            total_photos = count_photos(album, begin_date, end_date)
 
-            return render_template('view_photos.html', photos=photos, album_id=album_id)
+            response = {
+                'photos': photos,
+                'total_photos': total_photos,
+                'page': page,
+                'per_page': per_page
+            }
+            #print("Number of Photos:", len(photos))
+            if not photos:
+                return "No photos found in the selected date range."
+
+            return jsonify(serialized_photos)
+            #jsonify({'photos':serialized_photos})
         
         except Exception as e:
-            return f"Error generating photo view: {e}"
+            return  print("MySQL Error retrieving photos", e)
+
 
 @app.route('/photo/<int:photo_id>')
 def view_photo(photo_id):
@@ -557,33 +422,12 @@ def view_photo(photo_id):
     else:
         return "Photo not found", 404
 
-@app.route('/live_feed/<int:album_id>')
-def live_feed(album_id):
-    def generate_sse():
-        global global_counter
-        current_counter = None
-
-        latest_photo_url = f"/latest_photo/{album_id}"  # Manually construct the URL
-        sse.publish({"url": latest_photo_url}, type="latest_photo", channel=str(album_id))
-        
-        while True:
-            ts.sleep(1)  # Adjust the interval for checking changes
-            with lock:
-                if current_counter != global_counter:
-                    print("New SSE event")
-                    latest_photo_url = f"/latest_photo/{album_id}"  # Manually construct the URL
-                    sse.publish({"url": latest_photo_url}, type="latest_photo", channel=str(album_id))
-                    current_counter = global_counter
-
-    generate_sse()  # Just call the function to start SSE events
-    return ""
-
 @app.route('/camera_configurations')
 def camera_configurations():
     try:
         cameras = db.session.query(Camera_Parameters)
         return render_template('camera_configuration.html', cameras=cameras)
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"MySQL Error: {err}"
 
 @app.route('/add_camera', methods=['GET', 'POST'])
@@ -595,16 +439,6 @@ def add_camera():
         timelapse = request.form.get('timelapse')
 
         try:
-            # connection = mysql.connector.connect(**db_config)
-            # cursor = connection.cursor()
-            # insert_query = """
-            # INSERT INTO camera_parameters (camera_id, source, album, timelapse)
-            # VALUES (%s, %s, %s, %s)
-            # """
-            # cursor.execute(insert_query, (camera_id, source, album, timelapse))
-            # connection.commit()
-            # cursor.close()
-            # connection.close()
             newParams = Camera_Parameters(
                 id=id,
                 camera_id=camera_id,
@@ -628,48 +462,44 @@ def add_camera():
 @app.route('/edit_camera/<int:camera_id>', methods=['GET', 'POST'])
 def edit_camera(camera_id):
     try:
-        connection = mysql.connector.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        query = "SELECT * FROM camera_parameters WHERE camera_id = %s"
-        cursor.execute(query, (camera_id,))
-        camera = cursor.fetchone()
-        cursor.close()
-        connection.close()
+        db.session.query(Camera_Parameters).where(camera_id == Camera_Parameters.id)
         if request.method == 'POST':
             source = request.form.get('source')
             album = request.form.get('album')
             timelapse = request.form.get('timelapse')
+            newParams = Camera_Parameters(
+                id=id,
+                camera_id=camera_id,
+                source=source,
+                album=album,
+                timelapse=timelapse,
+            )
+            db.session.add(newParams)
+            db.session.commit()
 
-            connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor()
-            update_query = """
-            UPDATE camera_parameters
-            SET source = %s, album = %s, timelapse = %s
-            WHERE camera_id = %s
-            """
-            cursor.execute(update_query, (source, album, timelapse, camera_id))
-            connection.commit()
-            cursor.close()
-            connection.close()
             return redirect(url_for('index'))
         else:
             return render_template('edit_camera.html', camera=camera)
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"MySQL Error: {err}"
 
-@app.route('/delete_camera/<int:camera_id>', methods=['POST'])
-def delete_camera(camera_id):
-    try:
-        connection = mysql.connector.connect(**db_config)
-        cursor = connection.cursor()
-        delete_query = "DELETE FROM camera_parameters WHERE camera_id = %s"
-        cursor.execute(delete_query, (camera_id,))
-        connection.commit()
-        cursor.close()
-        connection.close()
-        return redirect(url_for('index'))
-    except mysql.connector.Error as err:
-        return f"MySQL Error: {err}"
+# @app.route('/delete_camera/<int:camera_id>', methods=['POST'])
+# def delete_camera(camera_id):
+#     try:
+        
+#         try:
+#             newParams = Camera_Parameters(
+#                 id=id,
+#                 camera_id=camera_id,
+#                 source=source,
+#                 album=album,
+#                 timelapse=timelapse,
+#             )
+#             db.session.add(newParams)
+#             db.session.commit()
+#         return redirect(url_for('index'))
+#     except mysql.connector.Error as err:
+#         return f"MySQL Error: {err}"
 
 
 if __name__ == "__main__":

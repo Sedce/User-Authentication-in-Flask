@@ -1,102 +1,35 @@
-header {
-	display: block;
-	position: sticky;
+.sidenav {
+	height: 100%;
+	width: 200px;
+	position: fixed;
+	z-index: 1;
 	top: 0;
 	left: 0;
-	width: 100%;
-	z-index: 10;
-	background-color: rgba(255, 0, 0, .9);
-	background-position: center top;
-	background-size: auto 200px;
-	background-repeat: repeat-x;
+	background-color: #111;
+	overflow-x: hidden;
+	padding-top: 20px;
+  }
 
-	.inner {
-		max-width: 1060px;
-		margin: 0 auto;
-		display: flex;
-		height: 50px;
-		align-items: center;
-		justify-content: center;
-		position: relative;
-	}
-
-	.logo {
-		display: block;
-		width: 76px;
-		height: 90px;
-		position: absolute;
-		top: 0;
-		left: 0;
-		background-color: white;
-		text-align: center;
-
-		img {
-			width: 45px;
-			margin-top: 10px;
-		}
-	}
-
-	nav {
-		display: none;
-
-		a {
-			font-family: 'Arial', serif;
-			font-size: 12px;
-			color: #8c8c8e;
-			text-transform: uppercase;
-			letter-spacing: 3px;
-			text-decoration: none;
-			margin: 0 18px;
-
-			&.active, &:hover {
-				color: white;
-			}
-		}
-
-		@media screen and (min-width: 800px) {
-			display: block;
-		}
-	}
-
-	.burger {
-		display: block;
-		position: relative;
-		top: -6px;
-		padding-left: 30px;
-
-		&:before {
-			content: "";
-			position: absolute;
-			left: 0;
-			top: 0;
-			width: 30px;
-			height: 2px;
-			background: white;
-			box-shadow: 0 12px 0 0 white, 0 6px 0 0 white;
-		}
-
-		@media screen and (min-width: 800px) {
-			display: none;
-		}
-	}
-
-	.donate-link {
-		width: 72px;
-		text-align: center;
-		position: absolute;
-		right: 10px;
-		top: 27px;
-		font-family: 'Arial', sans-serif;
-		font-size: 12px;
-		color: white;
-		text-transform: uppercase;
-		letter-spacing: 3px;
-		text-decoration: none;
-		padding-bottom: 6px;
-		border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-	}
-}
-
+  .sidenav a {
+	padding: 6px 6px 6px 32px;
+	text-decoration: none;
+	font-size: 25px;
+	color: #818181;
+	display: block;
+  }
+  
+  .sidenav a:hover {
+	color: #f1f1f1;
+  }
+  
+  .main {
+	margin-left: 200px; /* Same as the width of the sidenav */
+  }
+  
+  @media screen and (max-height: 450px) {
+	.sidenav {padding-top: 15px;}
+	.sidenav a {font-size: 18px;}
+  }
 #grid { 
 	display: grid;
 	grid-template-rows: 1fr 1fr 1fr;
@@ -112,4 +45,84 @@ header {
 	text-align: center;
   }
 
-  
+  div#template-left{
+	padding-top: 100px;
+	height: calc(100% - 10px);
+	width: 50%;
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	overflow-x: hidden;
+  }
+  div#template-right{
+	margin-left: 50%;
+	padding-left: 20px;
+  }
+  div#footer{
+		padding-top: 10px;
+		position: fixed;
+		left: 0;
+		bottom: 0;
+		width: 100%;
+		text-align: center;
+  }
+  .responsive-table {
+	li {
+	  border-radius: 3px;
+	  padding: 25px 30px;
+	  display: flex;
+	  justify-content: space-between;
+	  margin-bottom: 25px;
+	}
+	.table-header {
+	  background-color: gray;
+	  font-size: 14px;
+	  text-transform: uppercase;
+	  letter-spacing: 0.03em;
+	}
+	.table-row {
+	  padding:10px;
+	  background-color: #ffffff;
+	  box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.1);
+	}
+	.col-1 {
+	  flex-basis: 10%;
+	}
+	.col-2 {
+	  padding-left: 30px;
+	  flex-basis: 20%;
+	}
+	.col-3 {
+	  flex-basis: 25%;
+	}
+	.col-4 {
+	  flex-basis: 25%;
+	}
+	
+	@media all and (max-width: 767px) {
+	  .table-header {
+		display: none;
+	  }
+	  .table-row{
+		
+	  }
+	  li {
+		display: block;
+	  }
+	  .col {
+		flex-basis: 100%;
+	  }
+	  .col {
+		display: flex;
+		padding: 10px 0;
+		&:before {
+		  color: #6C7A89;
+		  padding-right: 10px;
+		  content: attr(data-label);
+		  flex-basis: 50%;
+		  text-align: right;
+		}
+	  }
+	}
+  }

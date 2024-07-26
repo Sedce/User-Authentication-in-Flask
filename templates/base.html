@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta data-name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/main.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
     <link href="https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet" />
@@ -13,20 +14,12 @@
     {% endblock %}
   </head>
   <body>
-    <div id="content">
-        <header>
-            <div class="inner">
-                <div class="burger"></div>
-                <nav>
-                    <a class="active" href="#">Dashboard</a>
-                    <a href="#">About Us</a>
-                    <a href="#">Our Work</a>
-                    <a href="#">Get Involved</a>
-                </nav>
-                <a href="#" class="donate-link">Log</a>
-            </div>
-        </header>
-        </div>
+    <div class="sidenav">
+      <a href="{{ url_for('index')}}">Dashboard</a>
+      <a href="{{ url_for('camera_list')}}">Camera List</a>
+      <a href="{{ url_for('settings')}}">Settings</a>
+      <a href="{{ url_for('log_out')}}">Log Out</a>
+    </div>
         {% block content %}
         {% endblock %}
     <div id="footer">
